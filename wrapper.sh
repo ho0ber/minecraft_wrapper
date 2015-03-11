@@ -35,11 +35,26 @@ run_server()
 
   sed -i -e 's/^eula=false*$/eula=true/' eula.txt
 
+  chatrx="\[\S+\] \[Server thread\/INFO\]: <(\S+)> (.+)"
+
   java -Xmx$MEM -Xms$MEM -jar minecraft_server.$latest_version.jar nogui | while read -r line
   do
+    if [[ $line =~ $chatrx ]]
+    then
+      if [ "${BASH_REMATCH[2]}" = "!restart" ]
+      then
+        echo "**********************************************" | tee -a server.log
+        echo "[`date +%H:%M:%S`] SERVER TERMINATED BY ${BASH_REMATCH[1]}" | tee -a server.log
+        echo "**********************************************" | tee -a server.log
+        killall java #whaaaaaat.
+        exit
+      fi
+    fi
+
     echo "[`date +%H:%M:%S`]  $line" | tee -a server.log
   done
 }
+
 trap control_c SIGINT
 
 # MAIN
